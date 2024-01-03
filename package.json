@@ -28,11 +28,18 @@
     "postpack": "backstage-cli package postpack"
   },
   "dependencies": {
-    "@backstage/plugin-scaffolder-node": "workspace:^"
+    "@backstage/backend-common": "^0.13.2",
+    "@backstage/config": "^1.0.0",
+    "@backstage/errors": "^1.0.0",
+    "@backstage/plugin-scaffolder-backend": "^1.1.0",
+    "@types/express": "*",
+    "node": "^17.7.2",
+    "winston": "^3.7.2"
   },
   "devDependencies": {
-    "@backstage/backend-common": "workspace:^",
-    "@backstage/cli": "workspace:^"
+    "@backstage/cli": "^0.17.0",
+    "@types/node": "^17.0.33",
+    "@types/promise-fs": "^2.1.2"
   },
   "files": [
     "dist"
