@@ -1,5 +1,5 @@
-# @backstage/plugin-scaffolder-backend-module-kubernetes-deploy
+# @pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy
 
-The kubernetes-deploy module for [@pfeifferj/plugin-scaffolder-backend](https://www.npmjs.com/package/@pfeifferj/plugin-scaffolder-backend).
+The kubernetes-deploy module for [@pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy](https://www.npmjs.com/package/@pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy).
 
 _This plugin was created through the Backstage CLI_
