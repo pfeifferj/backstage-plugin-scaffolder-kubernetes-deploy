@@ -17,7 +17,6 @@ import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
 import fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
-import path from 'path';
 import { applyObject } from 'k8s-apply';
 
 export const deployKubernetesAction = () => {
@@ -38,9 +37,8 @@ export const deployKubernetesAction = () => {
 			try {
 				// Read Kubernetes manifest from YAML file
 				let manifestYaml = '';
-				const manifestPath = path.resolve(manifest);
 				try {
-					manifestYaml = await fs.promises.readFile(manifestPath, {
+					manifestYaml = await fs.promises.readFile(ctx.input.manifest, {
 						encoding: 'utf-8',
 					});
 				} catch (fileError) {
