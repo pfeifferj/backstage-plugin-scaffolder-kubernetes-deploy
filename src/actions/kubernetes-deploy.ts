@@ -13,27 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
-import { applyObject } from 'k8s-apply';
-import * as fs from 'fs';
+import fs from 'fs-extra';
 import * as yaml from 'js-yaml';
+import { z } from 'zod';
+import path from 'path';
+import { applyObject } from 'k8s-apply';
 
 export const deployKubernetesAction = () => {
 	return createTemplateAction({
 		id: 'deploy:kubernetes',
-		// ... [rest of your schema here]
-		async handler(ctx) {
-			const { manifest: manifestPath, authToken, clusterUrl } = ctx.input;
+		schema: {
+			input: z.object({
+				manifest: z.string().describe('The Kubernetes manifest path'),
+				authToken: z
+					.string()
+					.describe('Authentication token to access the Kubernetes cluster'),
+				clusterUrl: z.string().describe('URL of the Kubernetes cluster'),
+			}),
+		},
 
+		async handler(ctx) {
+			const { manifest, authToken, clusterUrl } = ctx.input;
 			try {
 				// Read Kubernetes manifest from YAML file
-				const manifestYaml = await fs.promises.readFile(manifestPath, {
-					encoding: 'utf-8',
-				});
+				let manifestYaml = '';
+				const manifestPath = path.resolve(manifest);
+				try {
+					manifestYaml = await fs.promises.readFile(manifestPath, {
+						encoding: 'utf-8',
+					});
+				} catch (fileError) {
+					ctx.logger.error(`Error reading file: ${manifest}`, fileError);
+					throw fileError;
+				}
 
-				// Parse the YAML into a JavaScript object
-				const manifestObject = yaml.load(manifestYaml);
+				let manifestObject;
+				try {
+					manifestObject = yaml.load(manifestYaml);
+				} catch (yamlError) {
+					ctx.logger.error('Error parsing YAML content', yamlError);
+					throw yamlError;
+				}
 
 				// Apply the Kubernetes manifest using k8s-apply
 				const response = await applyObject(manifestObject, {
