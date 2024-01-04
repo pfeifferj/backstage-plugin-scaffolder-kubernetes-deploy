@@ -16,42 +16,45 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
 import { applyObject } from 'k8s-apply';
 
-export const deployKubernetesAction = createTemplateAction({
-	id: 'deploy:kubernetes',
-	schema: {
-		input: {
-			required: ['manifest', 'authToken', 'clusterUrl'],
-			type: 'object',
-			properties: {
-				manifest: {
-					type: 'object',
-					description: 'The Kubernetes manifest object',
-				},
-				authToken: {
-					type: 'string',
-					description: 'Authentication token to access the Kubernetes cluster',
-				},
-				clusterUrl: {
-					type: 'string',
-					description: 'URL of the Kubernetes cluster',
+export const deployKubernetesAction = () => {
+	return createTemplateAction({
+		id: 'deploy:kubernetes',
+		schema: {
+			input: {
+				required: ['manifest', 'authToken', 'clusterUrl'],
+				type: 'object',
+				properties: {
+					manifest: {
+						type: 'object',
+						description: 'The Kubernetes manifest object',
+					},
+					authToken: {
+						type: 'string',
+						description:
+							'Authentication token to access the Kubernetes cluster',
+					},
+					clusterUrl: {
+						type: 'string',
+						description: 'URL of the Kubernetes cluster',
+					},
 				},
 			},
 		},
-	},
-	async handler(ctx) {
-		const { manifest, authToken, clusterUrl } = ctx.input;
+		async handler(ctx) {
+			const { manifest, authToken, clusterUrl } = ctx.input;
 
-		try {
-			// Apply the Kubernetes manifest using k8s-apply
-			const response = await applyObject(manifest, {
-				server: clusterUrl,
-				token: authToken,
-			});
+			try {
+				// Apply the Kubernetes manifest using k8s-apply
+				const response = await applyObject(manifest, {
+					server: clusterUrl,
+					token: authToken,
+				});
 
-			ctx.logger.info(`Deployment response: ${JSON.stringify(response)}`);
-		} catch (error) {
-			ctx.logger.error(`Deployment failed: ${error}`);
-			throw error;
-		}
-	},
-});
+				ctx.logger.info(`Deployment response: ${JSON.stringify(response)}`);
+			} catch (error) {
+				ctx.logger.error(`Deployment failed: ${error}`);
+				throw error;
+			}
+		},
+	});
+};

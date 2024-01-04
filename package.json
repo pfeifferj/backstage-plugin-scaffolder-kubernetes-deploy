@@ -33,6 +33,7 @@
     "@backstage/errors": "^1.0.0",
     "@backstage/plugin-scaffolder-backend": "^1.1.0",
     "@types/express": "*",
+    "k8s-apply": "1.0.0",
     "node": "^17.7.2",
     "winston": "^3.7.2"
   },
