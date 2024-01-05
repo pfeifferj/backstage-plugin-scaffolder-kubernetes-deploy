@@ -8,7 +8,7 @@ Install package
 yarn add @pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy
 ```
 
-Import plugin into `scaffolder.ts
+Import plugin into `scaffolder.ts`
 
 ```typescript
 import { CatalogClient } from '@backstage/catalog-client';
