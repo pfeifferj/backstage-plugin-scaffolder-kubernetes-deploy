@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
+import path from 'path';
 import fs from 'fs-extra';
+import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
+import { serializeDirectoryContents } from '@backstage/plugin-scaffolder-node';
+import { resolveSafeChildPath } from '@backstage/backend-common';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
 import { applyObject } from 'k8s-apply';
-import path from 'path';
 
 export const deployKubernetesAction = () => {
 	return createTemplateAction({
@@ -27,9 +29,8 @@ export const deployKubernetesAction = () => {
 		description: 'Deploys Kubernetes manifests.',
 		schema: {
 			input: z.object({
-				manifestDirectory: z
-					.string()
-					.describe('The directory containing Kubernetes manifests'),
+				sourcePath: z.string().optional(),
+				targetPath: z.string().optional(),
 				authToken: z
 					.string()
 					.describe('Authentication token to access the Kubernetes cluster'),
@@ -38,35 +39,36 @@ export const deployKubernetesAction = () => {
 		},
 
 		async handler(ctx) {
-			const { manifestDirectory, authToken, clusterUrl } = ctx.input;
+			const { sourcePath, targetPath, authToken, clusterUrl } = ctx.input;
 			try {
-				// Log the current working directory
-				const cwd = process.cwd();
-				ctx.logger.info(`Current Working Directory: ${cwd}`);
+				const fileRoot = sourcePath
+					? resolveSafeChildPath(ctx.workspacePath, sourcePath)
+					: ctx.workspacePath;
+				const directoryContents = await serializeDirectoryContents(fileRoot);
 
-				// List and log files in the manifest directory
-				const files = await fs.promises.readdir(manifestDirectory);
-				ctx.logger.info(`Files in ${manifestDirectory}: ${files.join(', ')}`);
-
-				const yamlFiles = await findAllYamlFiles(manifestDirectory);
+				const yamlFiles = directoryContents
+					.filter(
+						(file) => file.path.endsWith('.yaml') || file.path.endsWith('.yml')
+					)
+					.map((file) =>
+						targetPath ? path.posix.join(targetPath, file.path) : file.path
+					);
 
 				for (const filePath of yamlFiles) {
 					let manifestYaml = '';
 					let manifestObject;
 
 					try {
-						// Read Kubernetes manifest from YAML file
 						manifestYaml = await fs.promises.readFile(filePath, {
 							encoding: 'utf-8',
 						});
 						manifestObject = yaml.load(manifestYaml);
 					} catch (error) {
 						ctx.logger.error(`Error processing file: ${filePath}`, error);
-						continue; // Proceed to the next file
+						continue;
 					}
 
 					try {
-						// Apply the Kubernetes manifest using k8s-apply
 						const response = await applyObject(manifestObject, {
 							server: clusterUrl,
 							token: authToken,
@@ -85,16 +87,3 @@ export const deployKubernetesAction = () => {
 		},
 	});
 };
-
-async function findAllYamlFiles(dir: string): Promise<string[]> {
-	const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
-	const files = await Promise.all(
-		dirents.map((dirent) => {
-			const res = path.resolve(dir, dirent.name);
-			return dirent.isDirectory() ? findAllYamlFiles(res) : res;
-		})
-	);
-	return Array.prototype
-		.concat(...files)
-		.filter((file) => file.endsWith('.yaml') || file.endsWith('.yml'));
-}
