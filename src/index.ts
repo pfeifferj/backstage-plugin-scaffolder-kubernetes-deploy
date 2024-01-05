@@ -20,4 +20,5 @@
  * @packageDocumentation
  */
 
+export * from './actions/kubernetes-template';
 export * from './actions/kubernetes-deploy';

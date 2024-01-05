@@ -22,6 +22,7 @@ import { applyObject } from 'k8s-apply';
 export const deployKubernetesAction = () => {
 	return createTemplateAction({
 		id: 'deploy:kubernetes',
+		description: 'Deploys Kubernetes manifests.',
 		schema: {
 			input: z.object({
 				manifest: z.string().describe('The Kubernetes manifest path'),
