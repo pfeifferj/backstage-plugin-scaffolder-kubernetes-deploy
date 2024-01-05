@@ -3,6 +3,10 @@
 The kubernetes-deploy module for [@pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy](https://www.npmjs.com/package/@pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy).
 
 ## quickstart
+Install package
+```bash
+yarn add @pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy
+```
 
 Import plugin into `scaffolder.ts
 
