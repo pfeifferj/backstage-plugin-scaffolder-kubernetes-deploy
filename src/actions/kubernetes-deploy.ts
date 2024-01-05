@@ -39,7 +39,7 @@ export const deployKubernetesAction = () => {
 		},
 
 		async handler(ctx) {
-			const { sourcePath, targetPath, authToken, clusterUrl } = ctx.input;
+			const { sourcePath, authToken, clusterUrl } = ctx.input;
 			try {
 				const fileRoot = sourcePath
 					? resolveSafeChildPath(ctx.workspacePath, sourcePath)
@@ -50,9 +50,7 @@ export const deployKubernetesAction = () => {
 					.filter(
 						(file) => file.path.endsWith('.yaml') || file.path.endsWith('.yml')
 					)
-					.map((file) =>
-						targetPath ? path.posix.join(targetPath, file.path) : file.path
-					);
+					.map((file) => path.resolve(fileRoot, file.path));
 
 				for (const filePath of yamlFiles) {
 					let manifestYaml = '';
