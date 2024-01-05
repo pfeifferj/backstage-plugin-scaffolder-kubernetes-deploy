@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
 import fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
 import { applyObject } from 'k8s-apply';
+import path from 'path';
 
 export const deployKubernetesAction = () => {
 	return createTemplateAction({
@@ -25,7 +27,9 @@ export const deployKubernetesAction = () => {
 		description: 'Deploys Kubernetes manifests.',
 		schema: {
 			input: z.object({
-				manifest: z.string().describe('The Kubernetes manifest path'),
+				manifestDirectory: z
+					.string()
+					.describe('The directory containing Kubernetes manifests'),
 				authToken: z
 					.string()
 					.describe('Authentication token to access the Kubernetes cluster'),
@@ -34,38 +38,55 @@ export const deployKubernetesAction = () => {
 		},
 
 		async handler(ctx) {
-			const { manifest, authToken, clusterUrl } = ctx.input;
+			const { manifestDirectory, authToken, clusterUrl } = ctx.input;
 			try {
-				// Read Kubernetes manifest from YAML file
-				let manifestYaml = '';
-				try {
-					manifestYaml = await fs.promises.readFile(ctx.input.manifest, {
-						encoding: 'utf-8',
-					});
-				} catch (fileError) {
-					ctx.logger.error(`Error reading file: ${manifest}`, fileError);
-					throw fileError;
+				const yamlFiles = await findAllYamlFiles(manifestDirectory);
+
+				for (const filePath of yamlFiles) {
+					let manifestYaml = '';
+					let manifestObject;
+
+					try {
+						// Read Kubernetes manifest from YAML file
+						manifestYaml = await fs.promises.readFile(filePath, {
+							encoding: 'utf-8',
+						});
+						manifestObject = yaml.load(manifestYaml);
+					} catch (error) {
+						ctx.logger.error(`Error processing file: ${filePath}`, error);
+						continue; // Proceed to the next file
+					}
+
+					try {
+						// Apply the Kubernetes manifest using k8s-apply
+						const response = await applyObject(manifestObject, {
+							server: clusterUrl,
+							token: authToken,
+						});
+						ctx.logger.info(
+							`Deployment response for ${filePath}: ${JSON.stringify(response)}`
+						);
+					} catch (error) {
+						ctx.logger.error(`Deployment failed for ${filePath}: ${error}`);
+					}
 				}
-
-				let manifestObject;
-				try {
-					manifestObject = yaml.load(manifestYaml);
-				} catch (yamlError) {
-					ctx.logger.error('Error parsing YAML content', yamlError);
-					throw yamlError;
-				}
-
-				// Apply the Kubernetes manifest using k8s-apply
-				const response = await applyObject(manifestObject, {
-					server: clusterUrl,
-					token: authToken,
-				});
-
-				ctx.logger.info(`Deployment response: ${JSON.stringify(response)}`);
 			} catch (error) {
-				ctx.logger.error(`Deployment failed: ${error}`);
+				ctx.logger.error('An error occurred during deployment:', error);
 				throw error;
 			}
 		},
 	});
 };
+
+async function findAllYamlFiles(dir: string): Promise<string[]> {
+	const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+	const files = await Promise.all(
+		dirents.map((dirent) => {
+			const res = path.resolve(dir, dirent.name);
+			return dirent.isDirectory() ? findAllYamlFiles(res) : res;
+		})
+	);
+	return Array.prototype
+		.concat(...files)
+		.filter((file) => file.endsWith('.yaml') || file.endsWith('.yml'));
+}
