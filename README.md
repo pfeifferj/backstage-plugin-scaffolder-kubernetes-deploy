@@ -5,7 +5,7 @@ The kubernetes-deploy module for [@pfeifferj/plugin-scaffolder-backend-module-ku
 ## quickstart
 Install package
 ```bash
-yarn add @pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy
+yarn add --cwd packages/backend @pfeifferj/plugin-scaffolder-backend-module-kubernetes-deploy
 ```
 
 Import plugin into `scaffolder.ts`

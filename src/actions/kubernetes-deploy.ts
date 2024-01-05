@@ -40,6 +40,14 @@ export const deployKubernetesAction = () => {
 		async handler(ctx) {
 			const { manifestDirectory, authToken, clusterUrl } = ctx.input;
 			try {
+				// Log the current working directory
+				const cwd = process.cwd();
+				ctx.logger.info(`Current Working Directory: ${cwd}`);
+
+				// List and log files in the manifest directory
+				const files = await fs.promises.readdir(manifestDirectory);
+				ctx.logger.info(`Files in ${manifestDirectory}: ${files.join(', ')}`);
+
 				const yamlFiles = await findAllYamlFiles(manifestDirectory);
 
 				for (const filePath of yamlFiles) {
