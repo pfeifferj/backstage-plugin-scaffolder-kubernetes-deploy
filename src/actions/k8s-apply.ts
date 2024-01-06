@@ -34,6 +34,7 @@ class K8sApi {
 			path: path,
 			method: 'GET',
 			headers: {},
+			rejectUnauthorized: false, // allow self-signed certs
 		};
 
 		const finalOptions = defaults(options || {}, defaultOptions);
