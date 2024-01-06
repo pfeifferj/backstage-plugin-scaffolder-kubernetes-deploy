@@ -53,29 +53,30 @@ export const deployKubernetesAction = () => {
 					.map((file) => path.resolve(fileRoot, file.path));
 
 				for (const filePath of yamlFiles) {
-					let manifestYaml = '';
-					let manifestObject;
-
 					try {
-						manifestYaml = await fs.promises.readFile(filePath, {
+						const manifestYaml = await fs.promises.readFile(filePath, {
 							encoding: 'utf-8',
 						});
-						manifestObject = yaml.load(manifestYaml);
+						yaml.loadAll(manifestYaml, (doc) => {
+							try {
+								const response = applyObject(doc, {
+									server: clusterUrl,
+									token: authToken,
+								});
+								ctx.logger.info(
+									`Deployment response for ${filePath}: ${JSON.stringify(
+										response
+									)}`
+								);
+							} catch (error) {
+								ctx.logger.error(
+									`Error applying Kubernetes object from ${filePath}`,
+									error
+								);
+							}
+						});
 					} catch (error) {
 						ctx.logger.error(`Error processing file: ${filePath}`, error);
-						continue;
-					}
-
-					try {
-						const response = await applyObject(manifestObject, {
-							server: clusterUrl,
-							token: authToken,
-						});
-						ctx.logger.info(
-							`Deployment response for ${filePath}: ${JSON.stringify(response)}`
-						);
-					} catch (error) {
-						ctx.logger.error(`Deployment failed for ${filePath}: ${error}`);
 					}
 				}
 			} catch (error) {
