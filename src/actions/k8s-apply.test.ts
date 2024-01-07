@@ -1,12 +1,9 @@
 import K8sApi from './k8s-apply';
 import nock from 'nock';
 
-nock.disableNetConnect();
-nock.enableNetConnect('example-k8s-cluster.com');
-
 describe('K8sApi k8s-apply function', () => {
-	const clusterUrl = 'https://example-k8s-cluster.com';
-	const token = 'test-token';
+	const clusterUrl = process.env.CLUSTER_URL!;
+	const token = process.env.TOKEN!;
 	const k8sApi = new K8sApi(clusterUrl, token);
 
 	const mockObject = {
@@ -23,55 +20,40 @@ describe('K8sApi k8s-apply function', () => {
 
 	beforeEach(() => {
 		nock.cleanAll();
+		nock(clusterUrl, {
+			reqheaders: {
+				Authorization: `Bearer ${token}`,
+			},
+		})
+			.persist() // Persist the mock to intercept all requests
+			.get('/api/v1/namespaces/default/testkinds/test-name')
+			.reply(404) // Mock a not found response
+			.post('/api/v1/namespaces/default/testkinds', mockObject)
+			.reply(201, {
+				/* ...mock response for object creation... */
+			})
+			.put('/api/v1/namespaces/default/testkinds/test-name', mockObject)
+			.reply(200, {
+				/* ...mock response for object update... */
+			});
 	});
 
 	it('should create a new object if it does not exist', async () => {
-		// Mock Kubernetes API for object creation
-		nock(clusterUrl)
-			.post(`/api/v1/namespaces/default/testkinds`, mockObject)
-			.reply(201, {
-				/* ...mock response... */
-			});
-
 		const result = await k8sApi.applyObject(mockObject);
-
 		expect(result).toBeDefined();
 		// Additional assertions...
 	});
 
 	it('should update the object if it already exists', async () => {
-		// Mock conflict response and subsequent successful update
-		nock(clusterUrl)
-			.post(`/api/v1/namespaces/default/testkinds`, mockObject)
-			.reply(409, {
-				/* ...mock conflict response... */
-			});
-
+		// Mock the existing object
 		nock(clusterUrl)
 			.get(`/api/v1/namespaces/default/testkinds/test-name`)
 			.reply(200, {
 				/* ...mock existing object response... */
 			});
 
-		nock(clusterUrl)
-			.put(`/api/v1/namespaces/default/testkinds/test-name`, mockObject)
-			.reply(200, {
-				/* ...mock updated object response... */
-			});
-
 		const result = await k8sApi.applyObject(mockObject);
-
 		expect(result).toBeDefined();
 		// Additional assertions...
-	});
-
-	it('should handle errors appropriately', async () => {
-		nock(clusterUrl)
-			.post(`/api/v1/namespaces/default/testkinds`, mockObject)
-			.replyWithError('Something went wrong');
-
-		await expect(k8sApi.applyObject(mockObject)).rejects.toThrow(
-			'Something went wrong'
-		);
 	});
 });

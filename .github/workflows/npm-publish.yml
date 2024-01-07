@@ -17,6 +17,9 @@ jobs:
           node-version: 18
       - run: yarn install --frozen-lockfile
       - run: yarn test
+        env:
+          CLUSTER_URL: ${{ secrets.CLUSTER_URL }}
+          TOKEN: ${{ secrets.TOKEN }}
 
   publish-npm:
     needs: build
