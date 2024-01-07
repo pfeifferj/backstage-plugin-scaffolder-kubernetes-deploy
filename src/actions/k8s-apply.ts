@@ -8,7 +8,8 @@ function defaults<T extends Record<string, any>>(
 	Object.keys(source).forEach((key) => {
 		const sourceValue = source[key as keyof T];
 		if (sourceValue !== undefined) {
-			target[key as keyof T] = sourceValue;
+			// Type assertion to ensure compatibility with T
+			target[key as keyof T] = sourceValue as T[keyof T];
 		}
 	});
 	return target;
@@ -30,7 +31,7 @@ class K8sApi {
 	): Promise<any> {
 		const defaultOptions: https.RequestOptions = {
 			hostname: this.clusterUrl.hostname,
-			port: this.clusterUrl.port || '443',
+			port: this.clusterUrl.port || '6443',
 			path: path,
 			method: 'GET',
 			headers: {},
