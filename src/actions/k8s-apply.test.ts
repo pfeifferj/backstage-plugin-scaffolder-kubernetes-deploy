@@ -1,6 +1,9 @@
 import K8sApi from './k8s-apply';
 import nock from 'nock';
 
+nock.disableNetConnect();
+nock.enableNetConnect('example-k8s-cluster.com');
+
 describe('K8sApi k8s-apply function', () => {
 	const clusterUrl = 'https://example-k8s-cluster.com';
 	const token = 'test-token';
