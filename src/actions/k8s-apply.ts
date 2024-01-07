@@ -113,20 +113,27 @@ class K8sApi {
 	async applyObject(object: any): Promise<any> {
 		let path = this.getPluralPath(object);
 		return this.post(path, object).then((res) => {
-			if (res.statusCode != 409) return res;
+			if (res.statusCode != 409) {
+				return { message: `Object created successfully at ${path}`, data: res };
+			}
 
 			path += `/${object.metadata.name}`;
 			return this.get(path).then(({ statusCode, data: getObject }) => {
 				if (statusCode != 200)
 					throw new Error(
-						`k8s-apply cannot get object: ${statusCode}\n${JSON.stringify(
+						`k8s-apply cannot get object at ${path}: ${statusCode}\n${JSON.stringify(
 							getObject,
 							null,
 							4
 						)}`
 					);
 				object.metadata.resourceVersion = getObject.metadata.resourceVersion;
-				return this.put(path, object);
+				return this.put(path, object).then((updateRes) => {
+					return {
+						message: `Object updated successfully at ${path}`,
+						data: updateRes,
+					};
+				});
 			});
 		});
 	}
