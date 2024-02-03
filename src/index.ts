@@ -20,4 +20,4 @@
  * @packageDocumentation
  */
 
-export * from './actions/kubernetes-deploy';
+export * from './actions/k8s-apply';
