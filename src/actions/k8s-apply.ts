@@ -9,7 +9,7 @@ interface KubernetesResource {
 	};
 }
 
-const createKubernetesApplyManifestAction = () => {
+const deployKubernetesAction = () => {
 	return createTemplateAction({
 		id: 'kubernetes:apply-manifest',
 		description: 'Applies a Kubernetes manifest',
@@ -38,9 +38,9 @@ const createKubernetesApplyManifestAction = () => {
 			},
 		},
 		async handler(ctx) {
-			const manifest = ctx.input.manifest as string; // Asserting manifest is a string
-			const clusterUrl = ctx.input.clusterUrl as string; // Asserting clusterUrl is a string
-			const token = ctx.input.token as string; // Asserting token is a string
+			const manifest = ctx.input.manifest as string;
+			const clusterUrl = ctx.input.clusterUrl as string;
+			const token = ctx.input.token as string;
 
 			const kubeConfig = new KubeConfig();
 			kubeConfig.loadFromOptions({
@@ -89,4 +89,4 @@ const createKubernetesApplyManifestAction = () => {
 	});
 };
 
-export default createKubernetesApplyManifestAction;
+export default deployKubernetesAction;
