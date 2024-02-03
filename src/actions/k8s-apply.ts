@@ -9,7 +9,7 @@ interface KubernetesResource {
 	};
 }
 
-const createKubernetesApplyManifestAction = () => {
+const deployKubernetesAction = () => {
 	return createTemplateAction({
 		id: 'kubernetes:apply-manifest',
 		description: 'Applies a Kubernetes manifest',
@@ -89,4 +89,4 @@ const createKubernetesApplyManifestAction = () => {
 	});
 };
 
-export default createKubernetesApplyManifestAction;
+export default deployKubernetesAction;
