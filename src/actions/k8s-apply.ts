@@ -28,19 +28,19 @@ export const deployKubernetesAction = () => {
 						description: 'URL of the Kubernetes API',
 						type: 'string',
 					},
-					token: {
+					authToken: {
 						title: 'Token',
 						description: 'Bearer token to authenticate with the Kubernetes API',
 						type: 'string',
 					},
 				},
-				required: ['manifest', 'clusterUrl', 'token'],
+				required: ['manifest', 'clusterUrl', 'authToken'],
 			},
 		},
 		async handler(ctx) {
 			const manifest = ctx.input.manifest as string;
 			const clusterUrl = ctx.input.clusterUrl as string;
-			const token = ctx.input.token as string;
+			const token = ctx.input.authToken as string;
 
 			const kubeConfig = new KubeConfig();
 			kubeConfig.loadFromOptions({
