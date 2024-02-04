@@ -21,7 +21,7 @@ export const deployKubernetesAction = () => {
 						title: 'Kubernetes Manifest',
 						description:
 							'YAML or JSON manifest for the Kubernetes resource to be applied',
-						type: 'object',
+						type: 'any',
 					},
 					clusterUrl: {
 						title: 'Cluster URL',
@@ -38,11 +38,16 @@ export const deployKubernetesAction = () => {
 			},
 		},
 		async handler(ctx) {
-			console.log(ctx.input.manifest);
-
 			const manifest = ctx.input.manifest as string;
 			const clusterUrl = ctx.input.clusterUrl as string;
 			const token = ctx.input.authToken as string;
+
+			console.log(
+				`Type of content: ${typeof manifest}, Content preview: ${manifest.substring(
+					0,
+					100
+				)}`
+			);
 
 			const kubeConfig = new KubeConfig();
 			kubeConfig.loadFromOptions({
