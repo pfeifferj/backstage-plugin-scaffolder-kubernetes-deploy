@@ -21,7 +21,7 @@ export const deployKubernetesAction = () => {
 						title: 'Kubernetes Manifest',
 						description:
 							'YAML or JSON manifest for the Kubernetes resource to be applied',
-						type: 'object',
+						type: 'any',
 					},
 					clusterUrl: {
 						title: 'Cluster URL',
@@ -38,11 +38,13 @@ export const deployKubernetesAction = () => {
 			},
 		},
 		async handler(ctx) {
-			console.log(ctx.input.manifest);
-
 			const manifest = ctx.input.manifest as string;
 			const clusterUrl = ctx.input.clusterUrl as string;
 			const token = ctx.input.authToken as string;
+
+			console.log(
+				`Type of content: ${typeof manifest}, Content preview: ${manifest}`
+			);
 
 			const kubeConfig = new KubeConfig();
 			kubeConfig.loadFromOptions({
@@ -70,22 +72,25 @@ export const deployKubernetesAction = () => {
 			});
 
 			const api = kubeConfig.makeApiClient(KubernetesObjectApi);
-			const resource = yaml.load(manifest) as KubernetesResource;
+			const resources = yaml.loadAll(manifest) as KubernetesResource[];
 
-			if (!resource || typeof resource !== 'object') {
+			if (!resources || !Array.isArray(resources) || resources.length === 0) {
 				throw new Error(
-					'Invalid manifest: must be a valid YAML or JSON object'
+					'Invalid manifest: must contain at least one valid YAML or JSON object'
 				);
 			}
 
-			try {
-				const result = await api.create(resource);
-				ctx.logger.info(
-					`Successfully applied manifest for ${resource.kind}/${resource.metadata?.name}: ${result}`
-				);
-			} catch (error) {
-				ctx.logger.error(`Failed to apply Kubernetes manifest: ${error}`);
-				throw error;
+			for (const resource of resources) {
+				try {
+					const result = await api.create(resource);
+					ctx.logger.info(
+						`Successfully applied manifest for ${resource.kind}/${resource.metadata?.name}: ${result}`
+					);
+				} catch (error) {
+					ctx.logger.error(
+						`Failed to apply Kubernetes manifest for ${resource.kind}/${resource.metadata?.name}: ${error}`
+					);
+				}
 			}
 		},
 	});
