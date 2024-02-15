@@ -2,7 +2,6 @@ import {
 	createBackendModule,
 	coreServices,
 } from '@backstage/backend-plugin-api';
-import { ScmIntegrations } from '@backstage/integration';
 import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
 import { deployKubernetesAction } from './actions/k8s-apply';
 
@@ -10,8 +9,8 @@ import { deployKubernetesAction } from './actions/k8s-apply';
  * @public
  * The Read File Module for the Scaffolder Backend
  */
-export const readFileModule = createBackendModule({
-	moduleId: 'read-file',
+export const deployKubernetesModule = createBackendModule({
+	moduleId: 'kubernetes-deploy',
 	pluginId: 'scaffolder',
 	register({ registerInit }) {
 		registerInit({
@@ -19,8 +18,7 @@ export const readFileModule = createBackendModule({
 				scaffolderActions: scaffolderActionsExtensionPoint,
 				config: coreServices.rootConfig,
 			},
-			async init({ scaffolderActions, config }) {
-				const integrations = ScmIntegrations.fromConfig(config);
+			async init({ scaffolderActions }) {
 				scaffolderActions.addActions(deployKubernetesAction());
 			},
 		});
