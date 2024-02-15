@@ -4,7 +4,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { ScmIntegrations } from '@backstage/integration';
 import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
-import { deployKubernetesAction } from './actions';
+import { deployKubernetesAction } from './actions/k8s-apply';
 
 /**
  * @public
@@ -21,12 +21,7 @@ export const readFileModule = createBackendModule({
 			},
 			async init({ scaffolderActions, config }) {
 				const integrations = ScmIntegrations.fromConfig(config);
-				scaffolderActions.addActions(
-					deployKubernetesAction({
-						integrations,
-						config,
-					})
-				);
+				scaffolderActions.addActions(deployKubernetesAction());
 			},
 		});
 	},
